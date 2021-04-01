@@ -90,7 +90,7 @@ if uploaded_file is not None:
         # st.button("Re-run")
 
 
-        # fig = plt.figure(1, figsize=[10, 10])
+        fig = plt.figure(1, figsize=[10, 10])
         fig, ax = plt.subplots()
         plt.ylabel('Views per Page')
         plt.xlabel('Day')
@@ -104,12 +104,12 @@ if uploaded_file is not None:
         # ax.plot_date(x, y, markerfacecolor='CornflowerBlue', markeredgecolor='white')
 
         for key in sums:
-            # plt.plot(days, sums[key], label=labels[key])
-            ax.plot_date(x, sums[key])
+            plt.plot(days, sums[key], label=labels[key])
+            # ax.plot_date(x, sums[key])
 
-        fig.autofmt_xdate()
-        ax.set_xlim([datetime.date(2015, 7, 1), datetime.date(2016, 12, 31)])
-        ax.set_ylim([2000,8000])
+        # fig.autofmt_xdate()
+        # ax.set_xlim([datetime.date(2015, 7, 1), datetime.date(2016, 12, 31)])
+        # ax.set_ylim([2000,8000])
         plt.legend()
         plt.show()
         st.set_option('deprecation.showPyplotGlobalUse', False)
