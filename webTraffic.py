@@ -1,15 +1,21 @@
 import streamlit as st
 import pandas as pd
+import altair as alt
 import datetime
 import numpy as np
-import re # to separate pages based on language (regular expression)
-import matplotlib.pyplot as plt # to visualize data
-from pandas.plotting import autocorrelation_plot # to visualize and configure the parameters of ARIMA model
-from statsmodels.tsa.arima_model import ARIMA
-import os
-import time
-
+import re
+import matplotlib.pyplot as plt
+import math
 import warnings
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import MinMaxScaler
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense
+from tensorflow.keras.layers import LSTM
+from statsmodels.tsa.arima_model import ARIMA
+from statsmodels.tsa.stattools import pacf
+from statsmodels.tsa.stattools import acf
+
 warnings.filterwarnings('ignore')
 
 image = '.\\undraw_fast_loading_0lbh.png'
@@ -69,27 +75,6 @@ if uploaded_file is not None:
 
         days = [r for r in range(sums['en'].shape[0])]
 
-        for i in range(len(days) - 400):
-            print(days[i])
-
-        # progress_bar = st.sidebar.progress(0)
-        # status_text = st.sidebar.empty()
-        # last_rows = np.random.randn(1, 1)
-        # chart = st.line_chart(last_rows)
-        #
-        # for i in range(1, 101):
-        #     new_rows = last_rows[-1, :] + np.random.randn(5, 1).cumsum(axis=0)
-        #     status_text.text("%i%% Complete" % i)
-        #     chart.add_rows(new_rows)
-        #     progress_bar.progress(i)
-        #     last_rows = new_rows
-        #     time.sleep(0.05)
-        #
-        # progress_bar.empty()
-        #
-        # st.button("Re-run")
-
-
         fig = plt.figure(1, figsize=[10, 10])
         fig, ax = plt.subplots()
         plt.ylabel('Views per Page')
@@ -100,28 +85,124 @@ if uploaded_file is not None:
                   'ru': 'Russian', 'es': 'Spanish'
                   }
 
-
-        # ax.plot_date(x, y, markerfacecolor='CornflowerBlue', markeredgecolor='white')
-
         for key in sums:
             plt.plot(days, sums[key], label=labels[key])
-            # ax.plot_date(x, sums[key])
 
-        # fig.autofmt_xdate()
-        # ax.set_xlim([datetime.date(2015, 7, 1), datetime.date(2016, 12, 31)])
-        # ax.set_ylim([2000,8000])
-        plt.legend()
-        plt.show()
-        st.set_option('deprecation.showPyplotGlobalUse', False)
-        st.pyplot()
+        for key in sums:
+            fig = plt.figure(1, figsize=[10, 5])
+            ax1 = fig.add_subplot(121)
+            ax2 = fig.add_subplot(122)
+            data = np.array(sums[key])
+            autocorr = acf(data)
+            pac = pacf(data)
+
+            x = [x for x in range(len(pac))]
+            ax1.plot(x[1:], autocorr[1:])
+
+            ax2.plot(x[1:], pac[1:])
+            ax1.set_xlabel('Lag')
+            ax1.set_ylabel('Autocorrelation')
+
+            ax2.set_xlabel('Lag')
+            ax2.set_ylabel('Partial Autocorrelation')
+
+        warnings.filterwarnings('ignore')
+
+        f = open("C:\\Users\\neelu\\Desktop\\web traffic forecasting\\model\\ARIMA_hits.txt", "w")
+
+        list_of_column_names = list(df.columns)
+        list_of_column_names.remove('Page')
+
+        params = {'en': [4, 1, 0], 'ja': [7, 1, 1], 'de': [7, 1, 1], 'na': [4, 1, 0], 'fr': [4, 1, 0], 'zh': [7, 1, 1],
+                  'ru': [4, 1, 0], 'es': [7, 1, 1]}
+
+        lang_obj = {'en': 'English', 'ja': 'Japanese', 'de': 'German', 'na': 'Media', 'fr': 'French', 'zh': 'Chinese',
+                    'ru': 'Russian', 'es': 'Spanish'}
+
+        for key in sums:
+            for keys in lang_obj:
+                if (keys == key):
+                    f.write(lang_obj[keys])
+                    f.write("\n")
+
+            data = np.array(sums[key])
+            f.write("Date         Expected         Predicted         Error")
+            f.write("\n")
+
+            result = None
+            arima = ARIMA(data, params[key])
+            result = arima.fit(disp=False)
+            pred = result.predict(2, 599, typ='levels')
+
+            x = [i for i in range(600)]
+            i = 0
+            for i in range(len(data)):
+                f.write(str(list_of_column_names[i]) + "     " + str(math.ceil(data[i])) + "               " + str(
+                    math.ceil(pred[i])) + "           " + str(
+                    np.sqrt(np.mean((math.ceil(data[i]) - math.ceil(pred[i])) ** 2))))
+                f.write("\n")
+
+            # progress_bar = st.sidebar.progress(0)
+            # status_text = st.sidebar.empty()
+            # last_rows = np.random.randn(1, 1)
+
+            # for i in range(1, 101):
+            #     new_rows = last_rows[-1, :] + np.random.randn(5, 1).cumsum(axis=0)
+            #     status_text.text("%i%% Complete" % i)
+            #     chart.add_rows(new_rows)
+            #     progress_bar.progress(i)
+            #     last_rows = new_rows
+            #     time.sleep(0.05)
+
+            # progress_bar.empty()
+
+        warnings.filterwarnings('ignore')
+
+        train_df = df.drop('Page', axis=1)
+
+        for key in sums:
+            row = [0] * sums[key].shape[0]
+            for i in range(sums[key].shape[0]):
+                row[i] = sums[key][i]
+
+            X = row[0:549]
+            y = row[1:550]
+
+            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=0)
+
+            sc = MinMaxScaler()
+            X_train = np.reshape(X_train, (-1, 1))
+            y_train = np.reshape(y_train, (-1, 1))
+            X_train = sc.fit_transform(X_train)
+            y_train = sc.fit_transform(y_train)
+
+            X_train = np.reshape(X_train, (384, 1, 1))
+
+            regressor = Sequential()
+
+            regressor.add(LSTM(units=8, activation='relu', input_shape=(None, 1)))
+
+            regressor.add(Dense(units=1))
+
+            regressor.compile(optimizer='rmsprop', loss='mean_squared_error')
+
+            regressor.fit(X_train, y_train, batch_size=10, epochs=100, verbose=0)
+
+            inputs = X
+            inputs = np.reshape(inputs, (-1, 1))
+            inputs = sc.transform(inputs)
+            inputs = np.reshape(inputs, (549, 1, 1))
+            y_pred = regressor.predict(inputs)
+            y_pred = sc.inverse_transform(y_pred)
+
+            b = np.reshape(y_pred, (np.product(y_pred.shape),))
+
+            d = {'Expected': y, 'Predicted': b}
+            chart = pd.DataFrame(data=d, title="Sales of consumer goods", x="Year", y="Amount in liters")
+            st.line_chart(chart)
 
     except Exception as e:
         print(e)
         df = pd.read_excel(uploaded_file)
 
-try:
-    st.write(df.head(10))
-except Exception as e:
-    st.info('Fetching dataset...')
-    print(e)
 
