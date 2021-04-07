@@ -6,6 +6,7 @@ import numpy as np
 import re
 import matplotlib.pyplot as plt
 import math
+import time
 import warnings
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
@@ -142,24 +143,11 @@ if uploaded_file is not None:
                     np.sqrt(np.mean((math.ceil(data[i]) - math.ceil(pred[i])) ** 2))))
                 f.write("\n")
 
-            # progress_bar = st.sidebar.progress(0)
-            # status_text = st.sidebar.empty()
-            # last_rows = np.random.randn(1, 1)
-
-            # for i in range(1, 101):
-            #     new_rows = last_rows[-1, :] + np.random.randn(5, 1).cumsum(axis=0)
-            #     status_text.text("%i%% Complete" % i)
-            #     chart.add_rows(new_rows)
-            #     progress_bar.progress(i)
-            #     last_rows = new_rows
-            #     time.sleep(0.05)
-
-            # progress_bar.empty()
-
         warnings.filterwarnings('ignore')
 
         train_df = df.drop('Page', axis=1)
 
+        global chart
         for key in sums:
             row = [0] * sums[key].shape[0]
             for i in range(sums[key].shape[0]):
@@ -198,8 +186,46 @@ if uploaded_file is not None:
             b = np.reshape(y_pred, (np.product(y_pred.shape),))
 
             d = {'Expected': y, 'Predicted': b}
-            chart = pd.DataFrame(data=d, title="Sales of consumer goods", x="Year", y="Amount in liters")
+            chart = pd.DataFrame(data=d)
             st.line_chart(chart)
+
+            # progress_bar = st.sidebar.progress(0)
+            # status_text = st.sidebar.empty()
+            # last_rows = np.random.randn(1, 1)
+            # for i in range(1, 3):
+                # new_rows = last_rows[-1, :] + np.random.randn(5, 1).cumsum(axis=0)
+                # print(new_rows)
+                # status_text.text("%i%% Complete" % i)
+                # chart.add_rows(new_rows)
+                # progress_bar.progress(i)
+                # last_rows = new_rows
+                # time.sleep(0.05)
+
+            # progress_bar.empty()
+
+
+        for i in range(0, 50):
+            print(chart.iloc[i, 0], chart.iloc[i, 1])
+
+        # progress_bar = st.progress(0)
+        # status_text = st.empty()
+        chart = st.line_chart(np.random.randn(10, 2))
+
+        for i in range(100):
+            # Update progress bar.
+            # progress_bar.progress(i + 1)
+
+            new_rows = np.random.randn(10, 2)
+
+            # Update status text.
+            # status_text.text(
+            #     'The latest random number is: %s' % new_rows[-1, 1])
+
+            # Append data to the chart.
+            chart.add_rows(new_rows)
+
+            # Pretend we're doing some computation that takes time.
+            time.sleep(0.1)
 
     except Exception as e:
         print(e)
