@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-import altair as alt
 import datetime
 import numpy as np
 import re
@@ -148,6 +147,7 @@ if uploaded_file is not None:
         train_df = df.drop('Page', axis=1)
 
         global chart
+
         for key in sums:
             row = [0] * sums[key].shape[0]
             for i in range(sums[key].shape[0]):
@@ -187,46 +187,17 @@ if uploaded_file is not None:
 
             d = {'Expected': y, 'Predicted': b}
             chart = pd.DataFrame(data=d)
-            st.line_chart(chart)
-
-            # progress_bar = st.sidebar.progress(0)
-            # status_text = st.sidebar.empty()
-            # last_rows = np.random.randn(1, 1)
-            # for i in range(1, 3):
-                # new_rows = last_rows[-1, :] + np.random.randn(5, 1).cumsum(axis=0)
-                # print(new_rows)
-                # status_text.text("%i%% Complete" % i)
-                # chart.add_rows(new_rows)
-                # progress_bar.progress(i)
-                # last_rows = new_rows
-                # time.sleep(0.05)
-
-            # progress_bar.empty()
-
-
-        for i in range(0, 50):
-            print(chart.iloc[i, 0], chart.iloc[i, 1])
-
-        # progress_bar = st.progress(0)
-        # status_text = st.empty()
-        chart = st.line_chart(np.random.randn(10, 2))
-
-        for i in range(100):
-            # Update progress bar.
-            # progress_bar.progress(i + 1)
-
-            new_rows = np.random.randn(10, 2)
-
-            # Update status text.
-            # status_text.text(
-            #     'The latest random number is: %s' % new_rows[-1, 1])
-
-            # Append data to the chart.
-            chart.add_rows(new_rows)
-
-            # Pretend we're doing some computation that takes time.
-            time.sleep(0.1)
-
+            progress_bar = st.sidebar.progress(0)
+            chart_new = st.line_chart(chart[:25])
+            j = 12
+            for i in range(0, len(chart), 25):
+                progress_bar.progress(j + 4)
+                end_index = i + 25
+                new_rows = chart[i:end_index]
+                chart_new.add_rows(new_rows)
+                time.sleep(0.4)
+                j = j + 4
+            progress_bar.empty()
     except Exception as e:
         print(e)
         df = pd.read_excel(uploaded_file)
