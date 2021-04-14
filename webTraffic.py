@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import math
 import time
 import warnings
+import base64
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.models import Sequential
@@ -28,12 +29,26 @@ st.image(image, caption=None, width=300, use_column_width=None)
 st.header("Solution")
 st.write("A prediction model which analyzes the web traffic pattern of the target server and thus the server resources are allocated in advance to handle the server load.")
 
+path_name = st.sidebar.text_input("Enter file path for report")
+
 st.sidebar.header("Visualisation Settings")
 uploaded_file = st.sidebar.file_uploader(label="Upload your web traffic dataset(.csv)", type=['csv','xslx'])
 
 st.sidebar.image("undraw_Data_trends_re_2cdy.png",caption=None, width=300, use_column_width=None)
 
+
+# def file_downloader(file_content):
+#
+#     print(file_content)
+#     b64 = base64.b64encode(file_content.encode()).decode()
+#     new_filename = "traffic_report.txt"
+#     st.markdown("#### Download File ####")
+#     href = f'<a href="data:file/txt;base64,{b64}" donwload="{new_filename}">Download Traffic report</a>'
+#     st.markdown(href,unsafe_allow_html=True)
+
+
 global df
+
 if uploaded_file is not None:
     try:
         df = pd.read_csv(uploaded_file).fillna(0)
@@ -48,7 +63,6 @@ if uploaded_file is not None:
                 list_of_column_names[j] = list_of_column_names[i]
                 j = j + 1
 
-
         x = [datetime.date(2015, 7, 1)] * 550
 
         def find_language(url):
@@ -60,6 +74,7 @@ if uploaded_file is not None:
         df['lang'] = df.Page.map(find_language)
 
         lang_sets = {}
+
         lang_sets['en'] = df[df.lang == 'en'].iloc[:, 0:-1]
         lang_sets['ja'] = df[df.lang == 'ja'].iloc[:, 0:-1]
         lang_sets['de'] = df[df.lang == 'de'].iloc[:, 0:-1]
@@ -108,7 +123,13 @@ if uploaded_file is not None:
 
         warnings.filterwarnings('ignore')
 
-        f = open("C:\\Users\\neelu\\Desktop\\web traffic forecasting\\model\\ARIMA_hits.txt", "w")
+        path_name.replace("\"", "\\")
+        if path_name:
+            file_name = path_name + "\\hits.txt"
+        else:
+            file_name = "..\\hits.txt"
+
+        f = open(file_name, "w")
 
         list_of_column_names = list(df.columns)
         list_of_column_names.remove('Page')
@@ -147,7 +168,6 @@ if uploaded_file is not None:
         train_df = df.drop('Page', axis=1)
 
         global chart
-
         for key in sums:
             row = [0] * sums[key].shape[0]
             for i in range(sums[key].shape[0]):
@@ -187,6 +207,10 @@ if uploaded_file is not None:
 
             d = {'Expected': y, 'Predicted': b}
             chart = pd.DataFrame(data=d)
+            for keys in lang_obj:
+                if keys == key:
+                    st.write("Web Traffic Prediction for " + lang_obj[keys] + " pages")
+
             progress_bar = st.sidebar.progress(0)
             chart_new = st.line_chart(chart[:25])
             j = 12
@@ -198,6 +222,10 @@ if uploaded_file is not None:
                 time.sleep(0.4)
                 j = j + 4
             progress_bar.empty()
+
+        # st.write(file_name.read())
+        # file_downloader(file_read)
+
     except Exception as e:
         print(e)
         df = pd.read_excel(uploaded_file)
