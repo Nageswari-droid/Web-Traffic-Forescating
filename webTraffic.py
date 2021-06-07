@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 import math
 import time
 import warnings
-import base64
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.models import Sequential
@@ -19,13 +18,13 @@ from statsmodels.tsa.stattools import acf
 
 warnings.filterwarnings('ignore')
 
-image = '.\\undraw_fast_loading_0lbh.png'
+image = './undraw_fast_loading_0lbh.png'
 
 st.title("Web Traffic Forecasting")
 st.header("Problem Statement")
 st.write("Web traffic congestion is a scenario faced by network appliction frequently.")
 st.write("Web traffic congestion is a phenomenum where the number of requests to be fulfilled by the server increases beyond the resource allocation.")
-st.image(image, caption=None, width=300, use_column_width=None)
+st.image("undraw_fast_loading_0lbh.png", caption=None, width=300, use_column_width=None)
 st.header("Solution")
 st.write("A prediction model which analyzes the web traffic pattern of the target server and thus the server resources are allocated in advance to handle the server load.")
 
@@ -35,17 +34,6 @@ st.sidebar.header("Visualisation Settings")
 uploaded_file = st.sidebar.file_uploader(label="Upload your web traffic dataset(.csv)", type=['csv','xslx'])
 
 st.sidebar.image("undraw_Data_trends_re_2cdy.png",caption=None, width=300, use_column_width=None)
-
-
-# def file_downloader(file_content):
-#
-#     print(file_content)
-#     b64 = base64.b64encode(file_content.encode()).decode()
-#     new_filename = "traffic_report.txt"
-#     st.markdown("#### Download File ####")
-#     href = f'<a href="data:file/txt;base64,{b64}" donwload="{new_filename}">Download Traffic report</a>'
-#     st.markdown(href,unsafe_allow_html=True)
-
 
 global df
 
@@ -222,9 +210,6 @@ if uploaded_file is not None:
                 time.sleep(0.4)
                 j = j + 4
             progress_bar.empty()
-
-        # st.write(file_name.read())
-        # file_downloader(file_read)
 
     except Exception as e:
         print(e)
